@@ -86,21 +86,21 @@ export default function CameraHUD({
             </div>
           </div>
         )}
+      </div>
 
-        {/* Oscilloscope Mini-Bar */}
-        <div className="oscilloscope-container" title="Real-Time Eye Aspect Ratio (EAR) Waveform">
-          <div className="osc-header">
-            <span>OCULAR OSCILLOSCOPE (LIVE EAR WAVEFORM)</span>
-            <span className="osc-tag">400ms WINDOW</span>
-          </div>
-          <canvas
-            ref={oscCanvasRef}
-            id="oscilloscope-canvas"
-            className="oscilloscope-canvas"
-            width="640"
-            height="50"
-          />
+      {/* Oscilloscope Mini-Bar */}
+      <div className="oscilloscope-container" title="Real-Time Eye Aspect Ratio (EAR) Waveform">
+        <div className="osc-header">
+          <span>OCULAR OSCILLOSCOPE (LIVE EAR WAVEFORM)</span>
+          <span className="osc-tag">400ms WINDOW</span>
         </div>
+        <canvas
+          ref={oscCanvasRef}
+          id="oscilloscope-canvas"
+          className="oscilloscope-canvas"
+          width="640"
+          height="50"
+        />
       </div>
     </section>
   );

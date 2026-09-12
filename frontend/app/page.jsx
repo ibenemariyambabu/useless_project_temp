@@ -468,12 +468,38 @@ export default function BlinkOSDashboard() {
       setMode("NORMAL OPERATION");
       addLog("Camera stream engaged. Loading MediaPipe FaceLandmarker...", "success");
 
-      // Load MediaPipe FaceLandmarker if available on window
-      if (window.FilesetResolver && window.FaceLandmarker) {
-        const fileset = await window.FilesetResolver.forVisionTasks(
+      // Load MediaPipe FaceLandmarker with robust fallback
+      let FilesetResolver = window.FilesetResolver;
+      let FaceLandmarker = window.FaceLandmarker;
+
+      if (!FilesetResolver || !FaceLandmarker) {
+        addLog("Loading MediaPipe Vision runtime...", "info");
+        try {
+          const vision = await import("@mediapipe/tasks-vision");
+          FilesetResolver = vision.FilesetResolver;
+          FaceLandmarker = vision.FaceLandmarker;
+          window.FilesetResolver = FilesetResolver;
+          window.FaceLandmarker = FaceLandmarker;
+        } catch (e) {
+          await new Promise((resolve) => {
+            if (window.FilesetResolver && window.FaceLandmarker) return resolve();
+            const onReady = () => {
+              window.removeEventListener("mediapipe-ready", onReady);
+              resolve();
+            };
+            window.addEventListener("mediapipe-ready", onReady);
+            setTimeout(resolve, 3000);
+          });
+          FilesetResolver = window.FilesetResolver;
+          FaceLandmarker = window.FaceLandmarker;
+        }
+      }
+
+      if (FilesetResolver && FaceLandmarker) {
+        const fileset = await FilesetResolver.forVisionTasks(
           "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
         );
-        landmarkerRef.current = await window.FaceLandmarker.createFromOptions(fileset, {
+        landmarkerRef.current = await FaceLandmarker.createFromOptions(fileset, {
           baseOptions: {
             modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
             delegate: "GPU"
@@ -487,7 +513,7 @@ export default function BlinkOSDashboard() {
         });
         addLog("MediaPipe Neural FaceLandmarker initialized successfully.", "success");
       } else {
-        addLog("MediaPipe CDN scripts loading in background...", "info");
+        addLog("MediaPipe Vision CDN still loading. Click Start again in a moment.", "warn");
       }
 
       runInferenceLoop();
