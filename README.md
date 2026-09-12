@@ -1,6 +1,29 @@
-# BLINKOS — PRODUCTION-READY FULL-STACK APPLICATION (v2.0)
+<img width="1280" height="640" alt="git (1)" src="https://github.com/user-attachments/assets/8920b256-2ba8-4988-b824-5351134eb4bd" />
 
-> **"The operating system for something you never needed to monitor — now with a production-grade full-stack architecture, Next.js dashboard, Python FastAPI backend, PostgreSQL database, and Docker Compose orchestration."**
+# BlinkOS 👁️🎯
+
+## Basic Details
+### Team Name: BlinkForce
+
+### Team Members
+- Team Lead: Ibene Mariyam Babu - Lead Developer
+
+### Project Description
+BlinkOS is a production-ready, full-stack computer-vision operating system and multiplayer arcade platform where involuntary and voluntary human eye blinks/winks act as the primary input controllers.
+
+### The Problem (that doesn't exist)
+Using your hands, mice, touchscreens, or keyboards to interact with computers requires unnecessary physical effort, manual dexterity, and repetitive finger movements. In a world full of hands-free technology, why should humans have to lift a finger to play rhythm games, battle peers in arcade arenas, or nourish virtual cyber-pets when our eyes are already blinking 15 to 20 times every single minute?
+
+### The Solution (that nobody asked for)
+BlinkOS completely eliminates traditional human-computer interfaces by turning your eyelids into high-precision input devices. Using an on-device MediaPipe 478-point facial mesh, a rotation-invariant Euclidean Eye Aspect Ratio (EAR) pipeline, a zero-lag falling-edge state machine with 400ms hardened refractory lockouts, and a real-time Python FastAPI + WebSocket multiplayer synchronization engine, BlinkOS transforms ordinary biological blinks into high-stakes gaming actions, competitive leaderboard rankings, soundboard reactions, and digital pet nourishment.
+
+## Technical Details
+### Technologies/Components Used
+For Software:
+- **Languages**: Python 3.10+, JavaScript (ES6+), HTML5, CSS3
+- **Frameworks**: FastAPI, Next.js 14 / React 18, Uvicorn
+- **Libraries**: MediaPipe Face Mesh, Web Audio API, HTML5 Canvas API, SQLAlchemy ORM, WebSockets
+- **Tools**: Docker Compose, Git, PostgreSQL 16, Chrome DevTools
 
 ![BlinkOS Full-Stack](https://img.shields.io/badge/BlinkOS-Full--Stack%20v2.0-00f2fe?style=for-the-badge)
 ![Next.js](https://img.shields.io/badge/Frontend-Next.js%2014%20%2F%20React%2018-black?style=for-the-badge)
@@ -252,3 +275,9 @@ python scratch/test_backend.py
 python scratch/test_ws.py
 ```
 Both test suites complete with **100% test pass rate**.
+
+---
+Made with ❤️ at TinkerHub Useless Projects 
+
+![Static Badge](https://img.shields.io/badge/TinkerHub-24?color=%23000000&link=https%3A%2F%2Fwww.tinkerhub.org%2F)
+![Static Badge](https://img.shields.io/badge/UselessProjects--26-26?link=https%3A%2F%2Ftinkerhub.org%2Fevents%2F1M8ORET9A1%2Fuseless-projects-3.0)
