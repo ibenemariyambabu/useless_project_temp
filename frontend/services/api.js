@@ -5,19 +5,66 @@
 
 const getApiBase = () => {
   if (typeof window !== "undefined") {
-    // If running inside Next.js or with proxy
-    return window.location.origin.includes(":3000")
-      ? "/api"
-      : "http://localhost:8000/api";
+    // 1. Explicitly configured API URL via environment or window override
+    if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
+    if (process.env.NEXT_PUBLIC_BACKEND_URL) return `${process.env.NEXT_PUBLIC_BACKEND_URL.replace(/\/$/, "")}/api`;
+    if (window.__BLINKOS_API_URL__) return window.__BLINKOS_API_URL.replace(/\/$/, "");
+
+    // 2. Production or Vercel deployment (hostname is not localhost or 127.0.0.1)
+    // Always route relative /api on Vercel to use Next.js serverless route handlers or rewrites
+    if (
+      window.location.hostname !== "localhost" &&
+      window.location.hostname !== "127.0.0.1"
+    ) {
+      return "/api";
+    }
+
+    // 3. Local Next.js dev server on port 3000
+    if (window.location.port === "3000") {
+      return "/api";
+    }
+
+    // 4. Fallback to default local FastAPI backend
+    return "http://localhost:8000/api";
   }
-  return "http://localhost:8000/api";
+  return process.env.NEXT_PUBLIC_API_URL || "/api";
 };
 
 const getWsBase = (sessionId) => {
   if (typeof window !== "undefined") {
+    // 1. Explicitly configured WebSocket URL via environment or window override
+    if (process.env.NEXT_PUBLIC_WS_URL) {
+      const base = process.env.NEXT_PUBLIC_WS_URL.replace(/\/$/, "");
+      return `${base}/ws/session/${sessionId}`;
+    }
+    if (window.__BLINKOS_WS_URL__) {
+      const base = window.__BLINKOS_WS_URL__.replace(/\/$/, "");
+      return `${base}/ws/session/${sessionId}`;
+    }
+
     const isHttps = window.location.protocol === "https:";
     const wsProto = isHttps ? "wss:" : "ws:";
-    const host = window.location.origin.includes(":3000")
+
+    // 2. If an external backend URL is specified, translate http/https -> ws/wss
+    if (process.env.NEXT_PUBLIC_BACKEND_URL) {
+      const base = process.env.NEXT_PUBLIC_BACKEND_URL
+        .replace(/^http:/, "ws:")
+        .replace(/^https:/, "wss:")
+        .replace(/\/$/, "");
+      return `${base}/ws/session/${sessionId}`;
+    }
+
+    // 3. Production or Vercel deployment without an external backend:
+    // Route via current host or fallback to standard WebSocket path
+    if (
+      window.location.hostname !== "localhost" &&
+      window.location.hostname !== "127.0.0.1"
+    ) {
+      return `${wsProto}//${window.location.host}/ws/session/${sessionId}`;
+    }
+
+    // 4. Local Next.js dev server on port 3000
+    const host = window.location.port === "3000"
       ? window.location.host
       : "localhost:8000";
     return `${wsProto}//${host}/ws/session/${sessionId}`;

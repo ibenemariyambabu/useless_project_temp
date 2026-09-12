@@ -27,11 +27,14 @@ For Software:
 
 ![BlinkOS Full-Stack](https://img.shields.io/badge/BlinkOS-Full--Stack%20v2.0-00f2fe?style=for-the-badge)
 ![Next.js](https://img.shields.io/badge/Frontend-Next.js%2014%20%2F%20React%2018-black?style=for-the-badge)
+![Vercel](https://img.shields.io/badge/Deploy-Vercel%20Ready-black?style=for-the-badge&logo=vercel)
 ![FastAPI](https://img.shields.io/badge/Backend-Python%20FastAPI-009688?style=for-the-badge)
 ![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL%2016-336791?style=for-the-badge)
 ![Docker Compose](https://img.shields.io/badge/Orchestration-Docker%20Compose-2496ED?style=for-the-badge)
 ![Zero Hardware](https://img.shields.io/badge/Hardware-100%25%20Zero%20Hardware-emerald?style=for-the-badge)
 ![Strict Privacy](https://img.shields.io/badge/Privacy-100%25%20Client--Side%20CV-blue?style=for-the-badge)
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fibenemariyambabu%2Fuseless_project_temp&root-directory=frontend&env=BACKEND_URL,NEXT_PUBLIC_WS_URL&envDescription=Optional%20backend%20and%20WebSocket%20URLs%20for%20live%20multiplayer)
 
 ---
 
@@ -266,7 +269,54 @@ python -m http.server 5500
 
 ---
 
-## 6. Verification & Automated Test Suite
+## 6. Deploying to Vercel (Production Cloud Deployment)
+
+BlinkOS is fully configured for zero-friction deployment on **Vercel** with Next.js 14 App Router, Edge network delivery, and built-in Serverless Route Handlers.
+
+### Method 1: 1-Click Instant Deploy
+
+Click the button below to deploy BlinkOS directly to your Vercel account with pre-configured settings:
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fibenemariyambabu%2Fuseless_project_temp&root-directory=frontend&env=BACKEND_URL,NEXT_PUBLIC_WS_URL&envDescription=Optional%20backend%20and%20WebSocket%20URLs%20for%20live%20multiplayer)
+
+---
+
+### Method 2: Deploying via Vercel Dashboard (Git Import)
+
+1. Open your [Vercel Dashboard](https://vercel.com/dashboard) and click **"Add New..."** ➔ **"Project"**.
+2. Select and import the repository: `ibenemariyambabu/useless_project_temp`.
+3. In the **Configure Project** settings:
+   - **Framework Preset**: `Next.js` (automatically detected)
+   - **Root Directory**: Click **Edit** and select `frontend`.
+4. *(Optional)* **Environment Variables**:
+   If connecting to a hosted FastAPI backend (e.g., on Railway, Render, Fly.io, or VPS):
+   | Variable | Example Value | Description |
+   |---|---|---|
+   | `BACKEND_URL` | `https://your-backend.up.railway.app` | Next.js server-side rewrite proxy destination |
+   | `NEXT_PUBLIC_API_URL` | `/api` | Client-side API base URL (defaults to `/api`) |
+   | `NEXT_PUBLIC_WS_URL` | `wss://your-backend.up.railway.app` | Real-time multiplayer WebSocket sync |
+   > **Note:** If no backend URL is specified, BlinkOS runs in **Zero-Config Standalone Cloud Mode** using built-in Next.js Serverless Route Handlers (`/api/sessions`, `/api/achievements`, etc.) and on-device MediaPipe computer vision.
+5. Click **Deploy**. Vercel compiles the production bundle in seconds and provides your live `*.vercel.app` production URL.
+
+---
+
+### Method 3: Deploying via Vercel CLI
+
+```bash
+# 1. Install Vercel CLI (if not already installed)
+npm i -g vercel
+
+# 2. Deploy from the frontend directory
+cd frontend
+vercel
+
+# 3. Deploy directly to production
+vercel --prod
+```
+
+---
+
+## 7. Verification & Automated Test Suite
 
 A verification test suite verifies database schema creation, REST API endpoints, and WebSocket two-way messaging:
 

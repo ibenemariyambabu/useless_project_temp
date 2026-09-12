@@ -1,5 +1,4 @@
 import "./globals.css";
-import Script from "next/script";
 
 export const metadata = {
   title: "BlinkOS — Person-Aware Computer-Vision Operating System",
@@ -17,9 +16,8 @@ export default function RootLayout({ children }) {
           rel="stylesheet"
         />
         {/* MediaPipe Tasks Vision CDN */}
-        <Script
+        <script
           type="module"
-          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               import { FilesetResolver, FaceLandmarker } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";

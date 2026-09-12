@@ -40,6 +40,7 @@ yarn-error.log*
 out/
 .nuxt/
 .cache/
+.vercel/
 
 # Environment Variables & Secrets
 .env
