@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # --- PostgreSQL Database ---
+  db:
+    image: postgres:16-alpine
+    container_name: blinkos-db
+    environment:
+      POSTGRES_USER: blinkos
+      POSTGRES_PASSWORD: blinkos_secret
+      POSTGRES_DB: blinkos
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U blinkos -d blinkos"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # --- Python FastAPI Backend ---
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: blinkos-backend
+    environment:
+      DATABASE_URL: postgresql://blinkos:blinkos_secret@db:5432/blinkos
+      HOST: "0.0.0.0"
+      PORT: 8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # --- Next.js Frontend Application ---
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: blinkos-frontend
+    environment:
+      BACKEND_URL: http://backend:8000
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+    driver: local

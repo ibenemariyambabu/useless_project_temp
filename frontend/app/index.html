@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BlinkOS — Person-Aware Computer-Vision Operating System</title>
+  <meta name="description" content="BlinkOS is a futuristic, person-aware computer-vision operating system that tracks, compares, and gamifies multi-person blinking in real time.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Orbitron:wght@500;700;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../styles/style.css">
+  
+  <!-- MediaPipe Tasks Vision CDN -->
+  <script type="module">
+    import { FilesetResolver, FaceLandmarker } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
+    window.FilesetResolver = FilesetResolver;
+    window.FaceLandmarker = FaceLandmarker;
+    window.dispatchEvent(new CustomEvent('mediapipe-ready'));
+  </script>
+</head>
+<body class="booting">
+
+  <!-- ================= BOOT SCREEN ================= -->
+  <div id="boot-screen" class="boot-screen" aria-live="polite">
+    <div class="boot-container">
+      <div class="boot-logo">
+        <span class="boot-icon">◉</span> BLINKOS
+      </div>
+      <div class="boot-tag">INITIALIZING PERSON-AWARE SYSTEM...</div>
+      
+      <div class="boot-log-terminal">
+        <div id="boot-logs" class="boot-logs"></div>
+      </div>
+      
+      <div class="boot-progress-bar">
+        <div id="boot-progress-fill" class="boot-progress-fill"></div>
+      </div>
+      <div class="boot-status" id="boot-status-text">INITIALIZING MULTI-PERSON TRACKER [0%]</div>
+    </div>
+  </div>
+
+  <!-- ================= SIMULATED HARDWARE FLASH ================= -->
+  <div id="blink-flash-overlay" class="blink-flash-overlay" aria-hidden="true"></div>
+
+  <!-- ================= MAIN APP WRAPPER ================= -->
+  <div id="app-container" class="app-container">
+    
+    <!-- Top System Header -->
+    <header class="sys-header">
+      <div class="header-left">
+        <div class="logo-lockup">
+          <span class="logo-symbol">◉</span>
+          <div class="logo-text">
+            <span class="brand-title">BLINKOS</span>
+            <span class="brand-sub">v2.0 • PERSON-AWARE EDITION</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-center">
+        <!-- Human Presence Monitor -->
+        <div class="presence-badge" id="presence-badge" title="Number of uniquely tracked human faces in view">
+          <span class="presence-icon" id="presence-icon">👤</span>
+          <span id="presence-text">PEOPLE DETECTED: 0</span>
+        </div>
+
+        <!-- Mode Indicator -->
+        <div class="mode-badge" id="mode-badge">
+          <span class="mode-pip"></span>
+          <span id="mode-text">IDLE MODE</span>
+        </div>
+
+        <!-- Local Privacy Pill -->
+        <div class="privacy-badge" title="Webcam is processed strictly in your local browser runtime. Zero frames leave your device.">
+          <span class="privacy-lock">🔒</span>
+          <span>PROCESSING LOCALLY</span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <!-- Feature Discovery Button -->
+        <button id="features-modal-btn" class="sys-btn" title="View BlinkOS Features Guide">
+          <span>📖</span>
+          <span>FEATURES</span>
+        </button>
+
+        <!-- Debug Mode Toggle -->
+        <button id="debug-toggle-btn" class="sys-btn" title="Toggle Developer Computer-Vision HUD Overlay">
+          <span>⚙️</span>
+          <span id="debug-label">DEBUG: OFF</span>
+        </button>
+
+        <!-- Sound Toggle Button -->
+        <button id="sound-toggle-btn" class="sys-btn icon-btn" title="Toggle Synthesized Audio Feedback" aria-label="Toggle Sound">
+          <span id="sound-icon">🔇</span>
+          <span id="sound-label">SOUND: OFF</span>
+        </button>
+
+        <!-- Camera Status Indicator -->
+        <div id="system-status-indicator" class="system-status status-offline">
+          <span class="status-pip"></span>
+          <span id="system-status-text">CAMERA OFF</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="hero-content">
+        <div class="hero-eyebrow">PERSON-AWARE COMPUTER VISION PROTOCOL</div>
+        <h1 class="hero-title">
+          The multi-person operating system for<br>
+          <span class="hero-gradient">something you never needed to count.</span>
+        </h1>
+        <p class="hero-description">
+          BlinkOS detects every face in front of the webcam, creates independent participant identities,
+          and compares your blinks in real time. Never combined. Never faked.
+        </p>
+      </div>
+
+      <div class="hero-actions">
+        <!-- Main Controls -->
+        <button id="start-btn" class="primary-btn glow-effect">
+          <span class="btn-indicator"></span>
+          <span id="start-btn-text">START MONITORING</span>
+        </button>
+
+        <!-- Scan Person Button -->
+        <button id="scan-person-btn" class="secondary-btn glow-cyan-hover" title="Establish visual tracking profile for detected person">
+          <span>🎯</span>
+          <span>SCAN PERSON</span>
+        </button>
+
+        <!-- New Session / Reset -->
+        <button id="new-session-btn" class="secondary-btn" title="Reset all participants and start a fresh session">
+          <span>🔄</span>
+          <span>NEW SESSION</span>
+        </button>
+
+        <!-- Export & Copy Results -->
+        <button id="export-results-btn" class="sys-btn" title="Download Complete Session Telemetry as JSON">
+          <span>📥</span>
+          <span>EXPORT TELEMETRY</span>
+        </button>
+
+        <button id="copy-results-btn" class="sys-btn" title="Copy Formatted Session Summary to Clipboard">
+          <span>📋</span>
+          <span>COPY SUMMARY</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Main OS Dashboard Grid -->
+    <main class="dashboard-grid">
+      
+      <!-- LEFT COLUMN: WEBCAM MONITOR & CONTROLS -->
+      <div class="grid-col-left">
+
+        <!-- WEBCAM MONITOR PANEL -->
+        <section class="dash-card camera-panel" aria-label="Webcam Computer Vision Monitor">
+          <div class="card-header">
+            <div class="header-title-group">
+              <span class="card-prefix">//</span>
+              <h2>OPTICAL SURVEILLANCE &amp; FACE TRACKER</h2>
+            </div>
+            <div class="camera-status-badges">
+              <span id="face-count-badge" class="badge badge-idle">NO HUMAN DETECTED</span>
+              <span id="cam-status-badge" class="badge badge-offline">🔴 CAMERA OFF</span>
+            </div>
+          </div>
+
+          <div class="camera-viewport-container" id="camera-viewport">
+            <!-- Video element (mirrored horizontally via CSS) -->
+            <video id="webcam-video" autoplay playsinline muted></video>
+            
+            <!-- Canvas Overlay for landmark contours, bounding boxes, and reticles -->
+            <canvas id="vision-canvas"></canvas>
+
+            <!-- Interactive Reticle HUD Elements -->
+            <div class="hud-overlay-elements">
+              <div class="hud-corner top-left"></div>
+              <div class="hud-corner top-right"></div>
+              <div class="hud-corner bottom-left"></div>
+              <div class="hud-corner bottom-right"></div>
+
+              <div class="hud-scan-line"></div>
+
+              <!-- Floating Telemetry Top Bar -->
+              <div class="hud-telemetry top-bar">
+                <span id="hud-tracking-info">FACES: 0 ACTIVE</span>
+                <span id="hud-fps-val">FPS: 0</span>
+              </div>
+
+              <!-- Scan Person Target Overlay -->
+              <div id="scan-target-overlay" class="scan-target-overlay hidden">
+                <div class="scan-ring"></div>
+                <div class="scan-crosshair"></div>
+                <div class="scan-status-text" id="scan-status-text">SCANNING FACIAL GEOMETRY...</div>
+              </div>
+
+              <!-- Blink Confirmation Banner inside viewport -->
+              <div id="viewport-blink-tag" class="viewport-blink-tag">
+                ⚡ BLINK CONFIRMED
+              </div>
+
+              <!-- Crisp Vector Arcade Combo & Announcer Banner -->
+              <div id="arcade-announcer-banner" class="arcade-announcer-banner hidden" aria-live="polite">
+                <div class="banner-pill" id="arcade-banner-pill">
+                  <span class="banner-multiplier" id="arcade-banner-multiplier">2X</span>
+                  <div class="banner-text-group">
+                    <span class="banner-title" id="arcade-banner-title">DOUBLE BLINK!</span>
+                    <span class="banner-callout" id="arcade-banner-callout">DOUBLE KILL!</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Camera Placeholder / Off State -->
+            <div id="camera-placeholder" class="camera-placeholder">
+              <div class="placeholder-icon">👁️</div>
+              <div class="placeholder-title">OPTICAL SENSORS DORMANT</div>
+              <p class="placeholder-text">Click <strong>START MONITORING</strong> to activate MediaPipe multi-face tracking.</p>
+              <div class="placeholder-note">100% On-Device Processing • Every person tracked independently.</div>
+            </div>
+
+            <!-- Camera Error State Display -->
+            <div id="camera-error-banner" class="camera-error-banner hidden">
+              <div class="error-icon">⚠️</div>
+              <div id="camera-error-title" class="error-title">CAMERA OFFLINE</div>
+              <div id="camera-error-desc" class="error-desc">Camera access was not granted.</div>
+              <button id="camera-retry-btn" class="retry-btn">RETRY CONNECTION</button>
+            </div>
+          </div>
+
+          <!-- Camera Sub-bar Controls & Sensitivity -->
+          <div class="camera-footer-controls">
+            <!-- Sensitivity Slider -->
+            <div class="sensitivity-control">
+              <div class="sensitivity-label-group">
+                <span class="t-label">BLINK SENSITIVITY:</span>
+                <span class="t-value" id="sensitivity-val-text">0.21 (NORMAL)</span>
+              </div>
+              <div class="slider-row">
+                <span class="slider-end-label">LOW</span>
+                <input type="range" id="sensitivity-slider" min="0.17" max="0.25" step="0.01" value="0.21" aria-label="Blink Sensitivity Threshold">
+                <span class="slider-end-label">HIGH</span>
+              </div>
+            </div>
+
+            <!-- Resolution & Model Info -->
+            <div class="telemetry-item-row">
+              <div class="telemetry-item">
+                <span class="t-label">MODEL:</span>
+                <span class="t-value">FaceLandmarker (Max 4 Faces)</span>
+              </div>
+              <div class="telemetry-item">
+                <span class="t-label">TRACKING:</span>
+                <span class="t-value" id="hud-track-mode">CENTROID + GRACE PERIOD (2.0s)</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- MULTI-PERSON ACTIVITY GRAPH (Canvas) -->
+        <section class="dash-card chart-panel" aria-label="Blink Activity Timeline">
+          <div class="card-header">
+            <div class="header-title-group">
+              <span class="card-prefix">//</span>
+              <h2>REAL-TIME BLINK FREQUENCY GRAPH</h2>
+            </div>
+            <div class="chart-legend" id="chart-dynamic-legend">
+              <!-- Dynamically populated with participant colored dots -->
+              <span class="chart-legend-item">
+                <span class="legend-pip" style="background: #64748b;"></span>
+                <span>AWAITING PARTICIPANTS</span>
+              </span>
+            </div>
+          </div>
+
+          <div class="chart-canvas-wrapper">
+            <canvas id="activity-chart-canvas"></canvas>
+            <div id="chart-empty-msg" class="chart-empty-msg">
+              <span>Awaiting optical telemetry to plot multi-person blink frequency...</span>
+            </div>
+          </div>
+
+          <div class="chart-footer">
+            <span>60s AGO</span>
+            <span>45s AGO</span>
+            <span>30s AGO</span>
+            <span>15s AGO</span>
+            <span>NOW (ROLLING TIMELINE)</span>
+          </div>
+        </section>
+
+        <!-- COMPETITION BATTLE ARENA -->
+        <section class="dash-card battle-panel" aria-label="Blink Battle Competition Arena">
+          <div class="card-header">
+            <div class="header-title-group">
+              <span class="card-prefix">⚔️</span>
+              <h2>COMPETITION BATTLE ARENA</h2>
+            </div>
+            <div class="battle-status-pill" id="battle-status-pill">ROUND READY</div>
+          </div>
+
+          <div class="battle-content">
+            <div class="battle-config-bar">
+              <div class="battle-round-picker">
+                <span class="t-label">ROUND DURATION:</span>
+                <div class="round-btn-group" id="round-btn-group">
+                  <button class="round-btn" data-sec="30">30s</button>
+                  <button class="round-btn active" data-sec="60">60s</button>
+                  <button class="round-btn" data-sec="90">90s</button>
+                  <button class="round-btn" data-sec="120">2 MIN</button>
+                </div>
+              </div>
+
+              <div class="battle-actions">
+                <button id="battle-start-btn" class="primary-btn mini-p-btn">
+                  <span>⚡ START BATTLE</span>
+                </button>
+                <button id="battle-pause-btn" class="secondary-btn mini-p-btn" disabled>
+                  <span>⏸ PAUSE</span>
+                </button>
+                <button id="battle-reset-btn" class="secondary-btn mini-p-btn">
+                  <span>↺ RESET</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Big Battle Clock & Leader Banner -->
+            <div class="battle-display-grid">
+              <div class="battle-clock-box">
+                <span class="battle-clock-label">TIME REMAINING</span>
+                <span class="battle-clock-val" id="battle-clock-val">01:00</span>
+              </div>
+
+              <div class="battle-leader-box" id="battle-leader-box">
+                <span class="battle-leader-label">CURRENT LEADER</span>
+                <span class="battle-leader-val" id="battle-leader-val">AWAITING BATTLE</span>
+              </div>
+            </div>
+
+            <!-- Battle Winner Card (Reveals on round finish) -->
+            <div id="battle-winner-banner" class="battle-winner-banner hidden">
+              <div class="winner-trophy">🏆</div>
+              <div class="winner-info">
+                <div class="winner-title">BATTLE WINNER DECLARED!</div>
+                <div class="winner-name" id="winner-name">PERSON 1</div>
+                <div class="winner-stats" id="winner-stats">Blinks: 24 • Rate: 24.0/min</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- RIGHT COLUMN: PARTICIPANT CARDS, LEADERBOARD & MINI-GAMES -->
+      <div class="grid-col-right">
+
+        <!-- PARTICIPANT CARDS (Dynamic list) -->
+        <section class="dash-card participants-panel" aria-label="Active Participants">
+          <div class="card-header">
+            <div class="header-title-group">
+              <span class="card-prefix">//</span>
+              <h2>PARTICIPANTS &amp; METRICS</h2>
+            </div>
+            <div class="header-actions">
+              <span class="t-value" id="participant-count-indicator">0 REGISTERED</span>
+            </div>
+          </div>
+
+          <!-- Dynamic Container: rendered via JS for each person -->
+          <div id="participants-list" class="participants-list">
+            <div class="participant-empty-card">
+              <div class="empty-icon">👥</div>
+              <div class="empty-title">NO PARTICIPANTS IN FRAME</div>
+              <div class="empty-text">Step in front of the camera to automatically receive a participant identity. Multiple people can join simultaneously!</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- LIVE SORTED LEADERBOARD -->
+        <section class="dash-card leaderboard-panel" aria-label="Live Blink Leaderboard">
+          <div class="card-header">
+            <div class="header-title-group">
+              <span class="card-prefix">🏆</span>
+              <h2>LIVE BLINK LEADERBOARD</h2>
+            </div>
+            <span class="live-pill">LIVE SORTED</span>
+          </div>
+
+          <div id="leaderboard-list" class="leaderboard-list">
+            <div class="leaderboard-empty">Leaderboard will automatically rank participants once detected.</div>
+          </div>
+
+          <div class="leaderboard-highlights">
+            <div class="highlight-item">
+              <span class="hl-label">👑 MOST ACTIVE:</span>
+              <span class="hl-val" id="hl-most-active">--</span>
+            </div>
+            <div class="highlight-item">
+              <span class="hl-label">⚡ FASTEST RATE:</span>
+              <span class="hl-val" id="hl-fastest-rate">--</span>
+            </div>
+            <div class="highlight-item">
+              <span class="hl-label">🔥 LONGEST STREAK:</span>
+              <span class="hl-val" id="hl-longest-streak">--</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- MINI-GAMES PANEL: BLINK RACE, RHYTHM HERO, NEO-PET & SOUNDBOARD -->
+        <section class="dash-card minigames-panel" aria-label="Mini-Games & Optical Experiences">
+          <div class="card-header">
+            <div class="header-title-group">
+              <span class="card-prefix">🎮</span>
+              <h2>OPTICAL MINI-GAMES &amp; EXPERIENCES</h2>
+            </div>
+            <div class="tab-pills">
+              <button class="tab-pill active" id="tab-race-btn">RACE</button>
+              <button class="tab-pill" id="tab-rhythm-btn">BLINK HERO</button>
+              <button class="tab-pill" id="tab-pet-btn">NEO-PET</button>
+              <button class="tab-pill" id="tab-reactions-btn">SOUNDBOARD</button>
+              <button class="tab-pill" id="tab-challenge-btn">CHALLENGE</button>
+            </div>
+          </div>
+
+          <!-- Game 1: Blink Race -->
+          <div id="game-race-view" class="game-view">
+            <div class="race-header">
+              <span class="race-title">BLINK QUICK-DRAW RACE</span>
+              <span class="race-desc">First person detected blinking after the countdown wins!</span>
+            </div>
+
+            <div class="race-arena" id="race-arena">
+              <div class="race-status-big" id="race-status-big">PRESS START RACE</div>
+              <div class="race-result-sub" id="race-result-sub">Ready when you are.</div>
+            </div>
+
+            <button id="start-race-btn" class="primary-btn mini-p-btn full-width">
+              <span>🎯 START BLINK RACE</span>
+            </button>
+          </div>
+
+          <!-- Game 2: Blink Hero (Rhythm Minigame) -->
+          <div id="game-rhythm-view" class="game-view hidden">
+            <div class="rhythm-header">
+              <div class="rhythm-title-group">
+                <span class="race-title">BLINK HERO: CYBER BEAT</span>
+                <span class="race-desc">Hit scrolling notes with Left Wink, Center Blink, and Right Wink!</span>
+              </div>
+              <div class="rhythm-difficulty-group">
+                <button class="diff-btn active" data-diff="casual">CASUAL</button>
+                <button class="diff-btn" data-diff="cyber">CYBER</button>
+                <button class="diff-btn" data-diff="overclock">OVERCLOCK</button>
+              </div>
+            </div>
+
+            <!-- Live Rhythm Scoreboard -->
+            <div class="rhythm-stats-bar">
+              <div class="rhythm-stat-item">
+                <span class="r-label">SCORE</span>
+                <span class="r-val" id="rhythm-score">0</span>
+              </div>
+              <div class="rhythm-stat-item">
+                <span class="r-label">STREAK</span>
+                <span class="r-val text-cyan" id="rhythm-streak">0x</span>
+              </div>
+              <div class="rhythm-stat-item">
+                <span class="r-label">RATING</span>
+                <span class="r-rating-badge" id="rhythm-rating">READY</span>
+              </div>
+              <div class="rhythm-stat-item">
+                <span class="r-label">ACCURACY</span>
+                <span class="r-val text-emerald" id="rhythm-acc">100%</span>
+              </div>
+            </div>
+
+            <!-- Rhythm Canvas (3 Scrolling Highway Lanes) -->
+            <div class="rhythm-canvas-container">
+              <canvas id="rhythm-canvas" width="480" height="220"></canvas>
+            </div>
+
+            <div class="rhythm-controls">
+              <button id="start-rhythm-btn" class="primary-btn mini-p-btn">
+                <span>▶ START TRACK</span>
+              </button>
+              <button id="stop-rhythm-btn" class="secondary-btn mini-p-btn">
+                <span>⏹ STOP</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Game 3: Virtual Pet Tamagotchi Engine -->
+          <div id="game-pet-view" class="game-view hidden">
+            <div class="pet-header">
+              <div class="pet-title-group">
+                <span class="race-title">NEO-PET: BIOMETRIC CYBER-FAMILIAR</span>
+                <span class="race-desc">Pet health &amp; evolution tied to your live blink frequency!</span>
+              </div>
+              <div class="pet-stage-badge" id="pet-stage-pill">
+                STAGE: <span id="pet-stage-name">CYBER-EGG</span>
+              </div>
+            </div>
+
+            <!-- Pet Creature Viewport -->
+            <div class="pet-creature-card">
+              <div class="pet-avatar-wrapper" id="pet-avatar-container">
+                <div class="pet-avatar-glow"></div>
+                <!-- Interactive Animated SVG Cyber Creature -->
+                <svg id="pet-svg" class="pet-svg" viewBox="0 0 160 160" width="130" height="130">
+                  <defs>
+                    <linearGradient id="petGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#00f2fe" />
+                      <stop offset="100%" stop-color="#00ff9d" />
+                    </linearGradient>
+                    <filter id="petGlow">
+                      <feGaussianBlur stdDeviation="3" result="glow" />
+                      <feMerge>
+                        <feMergeNode in="glow" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                  </defs>
+                  <!-- Body Base -->
+                  <circle cx="80" cy="80" r="48" fill="url(#petGrad)" filter="url(#petGlow)" id="pet-body" />
+                  <!-- Antennas / Ears -->
+                  <path d="M 50 40 L 38 18 L 58 28 Z" fill="#00f2fe" id="pet-ear-left" />
+                  <path d="M 110 40 L 122 18 L 102 28 Z" fill="#00f2fe" id="pet-ear-right" />
+                  <!-- Visor / Eyes Container -->
+                  <rect x="52" y="66" width="56" height="24" rx="12" fill="#0a0f1d" stroke="#00f2fe" stroke-width="2" />
+                  <!-- Left Eye -->
+                  <ellipse cx="66" cy="78" rx="6" ry="6" fill="#00ff9d" id="pet-eye-left" />
+                  <!-- Right Eye -->
+                  <ellipse cx="94" cy="78" rx="6" ry="6" fill="#00ff9d" id="pet-eye-right" />
+                  <!-- Mouth / Expression -->
+                  <path d="M 72 100 Q 80 108 88 100" stroke="#00f2fe" stroke-width="2.5" fill="none" stroke-linecap="round" id="pet-mouth" />
+                </svg>
+              </div>
+
+              <!-- Pet Vital Telemetry Gauges -->
+              <div class="pet-vitals-grid">
+                <div class="pet-vital-bar-group">
+                  <div class="vital-label-row">
+                    <span>HEALTH</span>
+                    <span id="pet-health-val">100%</span>
+                  </div>
+                  <div class="vital-progress-track">
+                    <div class="vital-progress-fill health" id="pet-health-bar" style="width: 100%;"></div>
+                  </div>
+                </div>
+
+                <div class="pet-vital-bar-group">
+                  <div class="vital-label-row">
+                    <span>ENERGY</span>
+                    <span id="pet-energy-val">100%</span>
+                  </div>
+                  <div class="vital-progress-track">
+                    <div class="vital-progress-fill energy" id="pet-energy-bar" style="width: 100%;"></div>
+                  </div>
+                </div>
+
+                <div class="pet-vital-bar-group">
+                  <div class="vital-label-row">
+                    <span>HAPPINESS</span>
+                    <span id="pet-happy-val">100%</span>
+                  </div>
+                  <div class="vital-progress-track">
+                    <div class="vital-progress-fill happiness" id="pet-happy-bar" style="width: 100%;"></div>
+                  </div>
+                </div>
+
+                <div class="pet-vital-bar-group">
+                  <div class="vital-label-row">
+                    <span>EVOLUTION XP (LEVEL <span id="pet-lvl-num">1</span>)</span>
+                    <span id="pet-xp-val">0 / 100 XP</span>
+                  </div>
+                  <div class="vital-progress-track">
+                    <div class="vital-progress-fill xp" id="pet-xp-bar" style="width: 0%;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pet Telemetry & Actions -->
+            <div class="pet-footer-bar">
+              <div class="pet-telemetry-badge">
+                <span class="pip-green"></span>
+                <span id="pet-status-msg">RATE: 16 BPM (IDEAL ZONE — THRIVING)</span>
+              </div>
+              <div class="pet-action-btns">
+                <button id="pet-feed-btn" class="mini-btn glow-cyan-hover"><span>🍎</span> FEED</button>
+                <button id="pet-hydrate-btn" class="mini-btn"><span>💧</span> RE-HYDRATE</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Game 4: Blink Soundboard & Combo Deck -->
+          <div id="game-reactions-view" class="game-view hidden">
+            <div class="reactions-header">
+              <div class="react-title-group">
+                <span class="race-title">BLINK SOUNDBOARD &amp; COMBO DECK</span>
+                <span class="race-desc">Gesture multi-blink sequences hands-free to broadcast audiovisual confetti bursts!</span>
+              </div>
+            </div>
+
+            <!-- Soundboard Combo Cards -->
+            <div class="combo-soundboard-grid">
+              <button class="combo-card-btn" data-combo="TRIPLE_BLINK" id="btn-combo-supernova">
+                <div class="combo-icon">🔥</div>
+                <div class="combo-details">
+                  <span class="combo-title">SUPERNOVA BURST</span>
+                  <span class="combo-trigger">3 RAPID BLINKS</span>
+                </div>
+                <span class="combo-reward">+50 XP</span>
+              </button>
+
+              <button class="combo-card-btn" data-combo="DOUBLE_WINK_LEFT" id="btn-combo-lightning">
+                <div class="combo-icon">⚡</div>
+                <div class="combo-details">
+                  <span class="combo-title">CYAN LIGHTNING</span>
+                  <span class="combo-trigger">DOUBLE LEFT WINK</span>
+                </div>
+                <span class="combo-reward">+30 XP</span>
+              </button>
+
+              <button class="combo-card-btn" data-combo="DOUBLE_WINK_RIGHT" id="btn-combo-plasma">
+                <div class="combo-icon">💥</div>
+                <div class="combo-details">
+                  <span class="combo-title">PLASMA EXPLOSION</span>
+                  <span class="combo-trigger">DOUBLE RIGHT WINK</span>
+                </div>
+                <span class="combo-reward">+30 XP</span>
+              </button>
+
+              <button class="combo-card-btn" data-combo="WINK_ALTERNATE" id="btn-combo-hyperdrive">
+                <div class="combo-icon">🚀</div>
+                <div class="combo-details">
+                  <span class="combo-title">HYPERDRIVE WARP</span>
+                  <span class="combo-trigger">LEFT ➔ RIGHT WINK</span>
+                </div>
+                <span class="combo-reward">+40 XP</span>
+              </button>
+
+              <button class="combo-card-btn" data-combo="BLINK_WINK_COMBO" id="btn-combo-matrix">
+                <div class="combo-icon">👁️</div>
+                <div class="combo-details">
+                  <span class="combo-title">CYBER MATRIX</span>
+                  <span class="combo-trigger">BLINK ➔ WINK</span>
+                </div>
+                <span class="combo-reward">+25 XP</span>
+              </button>
+            </div>
+
+            <!-- Live Gesture Buffer Monitor -->
+            <div class="gesture-buffer-monitor">
+              <span class="buffer-label">LIVE OCULAR GESTURE BUFFER:</span>
+              <div class="buffer-pills" id="gesture-buffer-display">
+                <span class="buffer-empty">[AWAITING OCULAR GESTURES]</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Game 5: Random Challenge -->
+          <div id="game-challenge-view" class="game-view hidden">
+            <div class="challenge-header">
+              <span class="challenge-title">RANDOM USELESS OBJECTIVE</span>
+              <button id="new-challenge-btn" class="mini-btn">🎲 ROLL NEW</button>
+            </div>
+
+            <div class="challenge-display-card">
+              <div class="challenge-quote" id="random-challenge-text">"Blink 5 times as fast as humanly possible."</div>
+              <div class="challenge-status" id="random-challenge-status">STATUS: IN PROGRESS</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ACHIEVEMENTS PANEL -->
+        <section class="dash-card achievements-panel" aria-label="Achievements">
+          <div class="card-header">
+            <div class="header-title-group">
+              <span class="card-prefix">🏅</span>
+              <h2>ACHIEVEMENTS</h2>
+            </div>
+            <button id="view-all-achievements-btn" class="mini-btn">VIEW ALL (7)</button>
+          </div>
+
+          <div class="active-achievement-container">
+            <div class="achievement-icon-wrapper" id="current-ach-icon">★</div>
+            <div class="achievement-details">
+              <div class="ach-label-status">LATEST UNLOCKED</div>
+              <div class="ach-title" id="current-ach-title">EYES WIDE OPEN</div>
+              <div class="ach-desc" id="current-ach-desc">Start monitoring to begin collecting pointless accolades.</div>
+            </div>
+          </div>
+
+          <div class="achievement-quick-badges" id="quick-badges-list">
+            <!-- Rendered via JS -->
+          </div>
+        </section>
+
+        <!-- SYSTEM TERMINAL (blinkos://system) -->
+        <section class="dash-card terminal-panel" aria-label="System Terminal Log">
+          <div class="card-header">
+            <div class="header-title-group">
+              <span class="terminal-dot"></span>
+              <span class="font-mono text-cyan">blinkos://system</span>
+            </div>
+            <button id="clear-terminal-btn" class="mini-btn">CLEAR LOG</button>
+          </div>
+
+          <div class="terminal-body" id="system-terminal">
+            <!-- Monospace logs injected here -->
+          </div>
+
+          <div class="terminal-prompt">
+            <span class="prompt-arrow">&gt;</span>
+            <span class="prompt-cursor"></span>
+          </div>
+        </section>
+
+      </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="sys-footer">
+      <div class="footer-left">
+        <span>BLINKOS v2.0 PERSON-AWARE</span> • <span>TINKERHUB USELESS PROJECTS HACKATHON</span>
+      </div>
+      <div class="footer-right">
+        <span>100% LOCAL BROWSER INFERENCE</span> • <span>ZERO CLOUD BIOMETRICS</span>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- 1. FEATURES DISCOVERY GUIDE MODAL -->
+  <div id="features-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-feat-title">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3 id="modal-feat-title">BLINKOS // SYSTEM CAPABILITIES GUIDE</h3>
+        <button id="close-features-modal-btn" class="modal-close-btn" aria-label="Close modal">&times;</button>
+      </div>
+      <div class="modal-body feature-guide-body">
+        <div class="feature-item">
+          <span class="feat-icon">👥</span>
+          <div>
+            <strong>Multi-Person Identity Tracking:</strong> Automatically tracks multiple faces simultaneously. Each person receives an independent ID, distinct color, and separate blink counter.
+          </div>
+        </div>
+        <div class="feature-item">
+          <span class="feat-icon">🎯</span>
+          <div>
+            <strong>Person Registration (Scan Person):</strong> Locks optical face coordinates with a 1.5s holographic reticle scan without storing any permanent biometrics.
+          </div>
+        </div>
+        <div class="feature-item">
+          <span class="feat-icon">⚔️</span>
+          <div>
+            <strong>Competition Battle Mode:</strong> Automatically triggers when 2+ people are detected. Run timed rounds (30s–120s) with live countdown and winner crowning.
+          </div>
+        </div>
+        <div class="feature-item">
+          <span class="feat-icon">🏁</span>
+          <div>
+            <strong>Blink Race:</strong> Quick-draw reflex contest! System counts down 3..2..1..BLINK and crowns the first person to blink with sub-second reaction timing.
+          </div>
+        </div>
+        <div class="feature-item">
+          <span class="feat-icon">🛡️</span>
+          <div>
+            <strong>Anti-Cheat EAR State Machine:</strong> Requires true open-closed-open transitions ($55\text{ms} - 1000\text{ms}$) with cooldown. Both eyes on one face count as ONE blink, never doubled!
+          </div>
+        </div>
+        <div class="feature-item">
+          <span class="feat-icon">📊</span>
+          <div>
+            <strong>Multi-Line Activity Graph:</strong> High-DPI canvas charting individual rolling frequency curves for each participant in real time.
+          </div>
+        </div>
+        <div class="feature-item">
+          <span class="feat-icon">📥</span>
+          <div>
+            <strong>Session Export:</strong> Export full multi-person analytics to JSON or copy a summary to your clipboard with one click.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. INDIVIDUAL BLINK HISTORY MODAL -->
+  <div id="history-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-history-title">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3 id="modal-history-title">PARTICIPANT BLINK LOG</h3>
+        <button id="close-history-modal-btn" class="modal-close-btn" aria-label="Close modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="history-modal-content" class="history-modal-content">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. ALL ACHIEVEMENTS MODAL -->
+  <div id="achievements-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-ach-title">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3 id="modal-ach-title">BLINKOS HALL OF OBSOLETE GLORY</h3>
+        <button id="close-ach-modal-btn" class="modal-close-btn" aria-label="Close modal">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-achievements-list">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. SESSION REPORT SUMMARY MODAL -->
+  <div id="session-report-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-report-title">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3 id="modal-report-title">BLINKOS SESSION REPORT</h3>
+        <button id="close-report-modal-btn" class="modal-close-btn" aria-label="Close modal">&times;</button>
+      </div>
+      <div class="modal-body" id="session-report-content">
+        <!-- Injected via JS -->
+      </div>
+      <div class="modal-footer">
+        <button id="modal-export-json-btn" class="primary-btn mini-p-btn">DOWNLOAD SESSION DATA (JSON)</button>
+        <button id="modal-copy-summary-btn" class="secondary-btn mini-p-btn">COPY SUMMARY TO CLIPBOARD</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Application Script -->
+  <script type="module" src="script.js"></script>
+</body>
+</html>
